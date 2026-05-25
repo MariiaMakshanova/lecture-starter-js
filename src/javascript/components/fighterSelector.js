@@ -2,11 +2,21 @@ import createElement from '../helpers/domHelper';
 import renderArena from './arena';
 import versusImg from '../../../resources/versus.png';
 import { createFighterPreview } from './fighterPreview';
+import fighterService from '../services/fightersService';
 
 const fighterDetailsMap = new Map();
 
 export async function getFighterInfo(fighterId) {
-    // get fighter info from fighterDetailsMap or from service and write it to fighterDetailsMap
+    const fighterInfo = fighterDetailsMap.get(fighterId);
+
+    if (fighterInfo) {
+        return fighterInfo;
+    }
+
+    const fighter = await fighterService.getFighterDetails(fighterId);
+    fighterDetailsMap.set(fighterId, fighter);
+
+    return fighter;
 }
 
 function startFight(selectedFighters) {
@@ -15,7 +25,7 @@ function startFight(selectedFighters) {
 
 function createVersusBlock(selectedFighters) {
     const canStartFight = selectedFighters.filter(Boolean).length === 2;
-    const onClick = () => startFight(selectedFighters);
+    const onClick = () => canStartFight && startFight(selectedFighters);
     const container = createElement({ tagName: 'div', className: 'preview-container___versus-block' });
     const image = createElement({
         tagName: 'img',
@@ -25,7 +35,8 @@ function createVersusBlock(selectedFighters) {
     const disabledBtn = canStartFight ? '' : 'disabled';
     const fightBtn = createElement({
         tagName: 'button',
-        className: `preview-container___fight-btn ${disabledBtn}`
+        className: `preview-container___fight-btn ${disabledBtn}`,
+        attributes: canStartFight ? {} : { disabled: 'disabled' }
     });
 
     fightBtn.addEventListener('click', onClick, false);
